@@ -9,7 +9,7 @@
     <!-- 卡片 -->
     <el-card>
       <!-- 导航 -->
-      <el-row :gutter="20">
+      <el-row :gutter="20" >
         <el-col :span="16">
           <el-select
             v-model="query.searchType"
@@ -34,15 +34,21 @@
         <el-col :span="4">
           <el-button type="primary" @click="addDialogVisible = true">新增用户</el-button>
         </el-col>
+        <el-col :span="4">
+          <el-button type="warning" @click="showPieChart2"  style="margin-left: -110px;">角色分类统计</el-button>
+        </el-col>
+        <el-dialog title="角色分类统计" :visible.sync="showPieChart" width="540px" height="300px">
+          <PieChart v-if="showPieChart" :chartData="pieData" ></PieChart>
+        </el-dialog>
       </el-row>
       <!-- 用户列表 -->
       <el-table :data="userList" border stripe>
         <el-table-column type="index"></el-table-column>
-        <el-table-column prop="username" label="用户名" width="130px" align="center"></el-table-column>
-        <el-table-column prop="password" label="密码" width="130px" align="center"></el-table-column>
-        <el-table-column prop="email" label="邮箱" width="200px" align="center"></el-table-column>
-        <el-table-column prop="updateTime" label="修改时间" width="200px" align="center"></el-table-column>
-        <el-table-column prop="role" label="角色" width="130px" align="center">
+        <el-table-column prop="username" label="用户名" width="80px" align="center"></el-table-column>
+        <el-table-column prop="password" label="密码" width="80px" align="center"></el-table-column>
+        <el-table-column prop="email" label="邮箱" width="180px" align="center"></el-table-column>
+        <el-table-column prop="updateTime" label="修改时间" width="160px" align="center"></el-table-column>
+        <el-table-column prop="role" label="角色" width="110px" align="center">
           <template slot-scope="scope">
             <template v-if="scope.row.isEditing">
               <el-select
@@ -59,8 +65,13 @@
             <template v-else>{{ scope.row.role }}</template>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="200px" align="center"></el-table-column>
-        <el-table-column label="操作">
+        <el-table-column prop="avatarurl" label="头像" width="160px" align="center">
+          <template slot-scope="scope">
+            <el-image :src="scope.row.avatarurl" style="width:135px;height:110px"></el-image>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTime" label="创建时间" width="160px" align="center"></el-table-column>
+        <el-table-column label="操作" align="center">
           <template slot-scope="scope">
             <!-- scope.row中包含了这一行所有数据。 -->
             <el-button
@@ -141,6 +152,9 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="editForm.email"></el-input>
         </el-form-item>
+        <el-form-item label="头像" prop="avatarurl">
+          <single-upload v-model="editForm.avatarurl"></single-upload>
+        </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" @click="editUser">确定</el-button>
@@ -151,7 +165,13 @@
 </template>
 
 <script>
+import PieChart from "@/components/PieChart.vue";
+import singleUpload from "@/components/upload/singleUpload.vue";
 export default {
+  components: {
+    PieChart,
+    singleUpload
+  },
   data() {
     return {
       // 查询
@@ -194,7 +214,8 @@ export default {
         id: "",
         username: "",
         password: "",
-        email: ""
+        email: "",
+        avatarurl: ""
       },
       editFormRules: {
         email: [
@@ -206,7 +227,11 @@ export default {
           }
         ]
       },
-      editDialogVisible: false
+      editDialogVisible: false,
+
+      //饼图
+      showPieChart: false,
+      pieData: []
     };
   },
   methods: {
@@ -393,7 +418,24 @@ export default {
           row.isEditing = false;
         }
       }, 100);
+    },
+    // 饼图
+    showPieChart2() {
+
+      this.$http
+        .get("/admin/pie") // 替换成你的后端接口地址
+        .then(response => {
+          console.log(response.data.data);
+          // 假设接口返回格式：[{ role: 'xxx', value: 123 }, ...]
+          this.pieData = response.data.data;
+        })
+        .catch(error => {
+          console.error("获取饼图数据失败：", error);
+          this.pieData = []; // 出错时用空数据避免组件报错
+        });
+        this.showPieChart = true; 
     }
+
   },
 
   //生命周期 - 创建完成（可以访问当前this 实例）

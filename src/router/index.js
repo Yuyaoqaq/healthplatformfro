@@ -10,7 +10,7 @@ import UserList from '@/components/admin/UserList.vue'
 
 Vue.use(VueRouter)
 
-const whiteList = ['/login', '/authority'];
+const whiteList = ['/login', '/authority','/home'];
 const routes = [
   {
     path: '/',
@@ -23,7 +23,6 @@ const routes = [
   {
     path: '/home',
     component: Home,
-    meta:{role:["超级管理员","普通用户"]},
     redirect:'/welcome',
     children:[
       {path:'/welcome',component:Welcome},
